@@ -26,7 +26,7 @@
 
 sp1_zkvm::entrypoint!(main);
 
-use zktempo_light_client::{encode_public_output, verify_update, ProofInputs};
+use zktempo_light_client::{encode_public_output, verify_update, ProofInputs, ProofOutputs};
 
 pub fn main() {
     // 1. Read host-supplied inputs (CBOR over a single read_vec). Using
@@ -47,8 +47,12 @@ pub fn main() {
         .expect("finality verification failed");
 
     // 4. Commit public outputs via the canonical encoder. The byte layout
-    //    is defined and tested in `zktempo_light_client::encode_public_output`
+    //    is defined and tested in `zktempo_light_client::{encode,decode}_public_output`
     //    so guest + Solana verifier share one source of truth.
-    let output = encode_public_output(&new_root, &prev_root, &validator_set_hash);
-    sp1_zkvm::io::commit_slice(&output);
+    let outputs = ProofOutputs {
+        new_root,
+        prev_root,
+        validator_set_hash,
+    };
+    sp1_zkvm::io::commit_slice(&encode_public_output(&outputs));
 }

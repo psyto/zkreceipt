@@ -88,11 +88,33 @@ pub struct ProofInputs {
     pub update: Update,
 }
 
+/// SP1 guest public outputs. What the zkVM commits to the proof and what
+/// the destination-chain verifier consumes. Symmetric counterpart to
+/// [`ProofInputs`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ProofOutputs {
+    /// New finalized root after applying the update.
+    pub new_root: FinalizedRoot,
+    /// Prior finalized root. Binds the proof to a specific transition,
+    /// preventing replay across non-contiguous state-root pairs.
+    pub prev_root: FinalizedRoot,
+    /// Validator-set hash active during this verification. The Solana
+    /// verifier checks this against its stored `LightClientState`.
+    pub validator_set_hash: [u8; 32],
+}
+
 /// Length in bytes of the SP1 guest's committed public output.
 pub const PUBLIC_OUTPUT_LEN: usize = 112;
 
-/// Pack the guest's committed public output into the canonical fixed-size
-/// 112-byte layout consumed by the Solana verifier program.
+/// Errors returned by [`decode_public_output`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DecodeError {
+    /// Input slice was not exactly [`PUBLIC_OUTPUT_LEN`] bytes.
+    InvalidLength,
+}
+
+/// Pack [`ProofOutputs`] into the canonical fixed-size 112-byte layout
+/// consumed by the Solana verifier program.
 ///
 /// Layout:
 ///
@@ -104,21 +126,53 @@ pub const PUBLIC_OUTPUT_LEN: usize = 112;
 /// | 48..80  |  32    | `prev_root.state_root`           |
 /// | 80..112 |  32    | `validator_set_hash`             |
 ///
-/// Both the SP1 guest and the Solana verifier MUST use this function (or
-/// its inverse) as the single source of truth for the layout. Any offset
-/// change is a wire-breaking change.
-pub fn encode_public_output(
-    new_root: &FinalizedRoot,
-    prev_root: &FinalizedRoot,
-    validator_set_hash: &[u8; 32],
-) -> [u8; PUBLIC_OUTPUT_LEN] {
+/// Both the SP1 guest (encoder) and the Solana verifier (decoder, via
+/// [`decode_public_output`]) MUST use this function as the single source
+/// of truth for the layout. Any offset change is a wire-breaking change.
+pub fn encode_public_output(outputs: &ProofOutputs) -> [u8; PUBLIC_OUTPUT_LEN] {
     let mut out = [0u8; PUBLIC_OUTPUT_LEN];
-    out[0..8].copy_from_slice(&new_root.slot.to_le_bytes());
-    out[8..40].copy_from_slice(&new_root.state_root);
-    out[40..48].copy_from_slice(&prev_root.slot.to_le_bytes());
-    out[48..80].copy_from_slice(&prev_root.state_root);
-    out[80..112].copy_from_slice(validator_set_hash);
+    out[0..8].copy_from_slice(&outputs.new_root.slot.to_le_bytes());
+    out[8..40].copy_from_slice(&outputs.new_root.state_root);
+    out[40..48].copy_from_slice(&outputs.prev_root.slot.to_le_bytes());
+    out[48..80].copy_from_slice(&outputs.prev_root.state_root);
+    out[80..112].copy_from_slice(&outputs.validator_set_hash);
     out
+}
+
+/// Inverse of [`encode_public_output`]. Parse a 112-byte slice — e.g., the
+/// proof's committed public values or a Solana account's stored bytes —
+/// back into structured [`ProofOutputs`].
+///
+/// Fails with [`DecodeError::InvalidLength`] iff `bytes.len() != PUBLIC_OUTPUT_LEN`.
+/// All other byte sequences decode successfully; semantic validation
+/// (e.g. `new_root.slot > prev_root.slot`) is the caller's responsibility.
+pub fn decode_public_output(bytes: &[u8]) -> Result<ProofOutputs, DecodeError> {
+    if bytes.len() != PUBLIC_OUTPUT_LEN {
+        return Err(DecodeError::InvalidLength);
+    }
+
+    let new_slot = u64::from_le_bytes(bytes[0..8].try_into().unwrap());
+    let mut new_state_root = [0u8; 32];
+    new_state_root.copy_from_slice(&bytes[8..40]);
+
+    let prev_slot = u64::from_le_bytes(bytes[40..48].try_into().unwrap());
+    let mut prev_state_root = [0u8; 32];
+    prev_state_root.copy_from_slice(&bytes[48..80]);
+
+    let mut validator_set_hash = [0u8; 32];
+    validator_set_hash.copy_from_slice(&bytes[80..112]);
+
+    Ok(ProofOutputs {
+        new_root: FinalizedRoot {
+            slot: new_slot,
+            state_root: new_state_root,
+        },
+        prev_root: FinalizedRoot {
+            slot: prev_slot,
+            state_root: prev_state_root,
+        },
+        validator_set_hash,
+    })
 }
 
 /// Verify a finality update against the current store. On success, returns
@@ -178,22 +232,26 @@ mod tests {
         assert_eq!(original, decoded);
     }
 
+    fn fixture_outputs() -> ProofOutputs {
+        ProofOutputs {
+            new_root: FinalizedRoot {
+                slot: 0x0102_0304_0506_0708,
+                state_root: [0xAA; 32],
+            },
+            prev_root: FinalizedRoot {
+                slot: 0x1112_1314_1516_1718,
+                state_root: [0xBB; 32],
+            },
+            validator_set_hash: [0xCC; 32],
+        }
+    }
+
     /// Locks down the wire-breaking byte layout of [`encode_public_output`].
     /// The Solana verifier reads these offsets directly; any reordering
     /// here silently breaks downstream consumption.
     #[test]
     fn public_output_layout_is_stable() {
-        let new_root = FinalizedRoot {
-            slot: 0x0102_0304_0506_0708,
-            state_root: [0xAA; 32],
-        };
-        let prev_root = FinalizedRoot {
-            slot: 0x1112_1314_1516_1718,
-            state_root: [0xBB; 32],
-        };
-        let validator_set_hash = [0xCC; 32];
-
-        let out = encode_public_output(&new_root, &prev_root, &validator_set_hash);
+        let out = encode_public_output(&fixture_outputs());
 
         // Total length is exactly PUBLIC_OUTPUT_LEN (112).
         assert_eq!(out.len(), PUBLIC_OUTPUT_LEN);
@@ -208,5 +266,30 @@ mod tests {
         assert_eq!(&out[48..80], &[0xBB; 32]);
         // 80..112: validator_set_hash.
         assert_eq!(&out[80..112], &[0xCC; 32]);
+    }
+
+    /// encode → decode preserves the structured value. Catches any drift
+    /// between the two halves of the layout contract.
+    #[test]
+    fn public_output_encode_decode_roundtrip() {
+        let original = fixture_outputs();
+        let encoded = encode_public_output(&original);
+        let decoded = decode_public_output(&encoded).expect("valid 112-byte input");
+        assert_eq!(original, decoded);
+    }
+
+    /// `decode_public_output` rejects any slice length other than
+    /// [`PUBLIC_OUTPUT_LEN`]. Empty, short-by-one, long-by-one all fail.
+    #[test]
+    fn decode_rejects_wrong_length() {
+        assert_eq!(decode_public_output(&[]), Err(DecodeError::InvalidLength));
+        assert_eq!(
+            decode_public_output(&[0u8; PUBLIC_OUTPUT_LEN - 1]),
+            Err(DecodeError::InvalidLength)
+        );
+        assert_eq!(
+            decode_public_output(&[0u8; PUBLIC_OUTPUT_LEN + 1]),
+            Err(DecodeError::InvalidLength)
+        );
     }
 }
