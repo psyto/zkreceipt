@@ -24,12 +24,9 @@
 
 #![no_main]
 
-extern crate alloc;
-
 sp1_zkvm::entrypoint!(main);
 
-use alloc::vec::Vec;
-use zktempo_light_client::{verify_update, ProofInputs};
+use zktempo_light_client::{encode_public_output, verify_update, ProofInputs};
 
 pub fn main() {
     // 1. Read host-supplied inputs (CBOR over a single read_vec). Using
@@ -41,31 +38,17 @@ pub fn main() {
         ciborium::from_reader(&encoded[..]).expect("ProofInputs CBOR decode failed");
 
     // 2. Capture prior state for the public-output binding.
-    let prev_slot = inputs.store.latest.slot;
-    let prev_state_root = inputs.store.latest.state_root;
+    let prev_root = inputs.store.latest.clone();
     let validator_set_hash = inputs.store.validator_set_hash;
 
-    // 3. Run light-client verification. Panics if invalid; this is
-    //    what makes the proof bind to a valid consensus transition.
+    // 3. Run light-client verification. Panics if invalid; this is what
+    //    makes the proof bind to a valid consensus transition.
     let new_root = verify_update(&inputs.store, &inputs.update)
         .expect("finality verification failed");
 
-    // 4. Commit public outputs. Format (fixed-layout, 112 bytes):
-    //      [0..8)    new_slot (u64, LE)
-    //      [8..40)   new_state_root ([u8; 32])
-    //      [40..48)  prev_slot (u64, LE)
-    //      [48..80)  prev_state_root ([u8; 32])
-    //      [80..112) validator_set_hash ([u8; 32])
-    //
-    //    Solana-side `update_light_client` reads this layout via direct
-    //    byte offsets. Final encoding (likely Borsh) is pinned in
-    //    spec/prover.md.
-    let mut output = Vec::with_capacity(112);
-    output.extend_from_slice(&new_root.slot.to_le_bytes());
-    output.extend_from_slice(&new_root.state_root);
-    output.extend_from_slice(&prev_slot.to_le_bytes());
-    output.extend_from_slice(&prev_state_root);
-    output.extend_from_slice(&validator_set_hash);
-
+    // 4. Commit public outputs via the canonical encoder. The byte layout
+    //    is defined and tested in `zktempo_light_client::encode_public_output`
+    //    so guest + Solana verifier share one source of truth.
+    let output = encode_public_output(&new_root, &prev_root, &validator_set_hash);
     sp1_zkvm::io::commit_slice(&output);
 }
