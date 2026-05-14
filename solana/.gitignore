@@ -1,0 +1,21 @@
+# Anchor build artifacts
+.anchor/
+target/
+test-ledger/
+
+# Cargo.lock excluded until `anchor build` succeeds end-to-end with the
+# committed toolchain. Re-include and commit once a clean lockfile is
+# produced (Anchor convention is to commit it for reproducibility).
+Cargo.lock
+
+# Generated IDL
+.idl/
+
+# JS/TS test dependencies
+node_modules/
+yarn.lock
+*.log
+
+# Solana keypairs — never commit
+*-keypair.json
+target/deploy/*-keypair.json

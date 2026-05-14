@@ -4,9 +4,13 @@ members = [
     "light-client",
     "prover",
 ]
+exclude = [
+    # Nested Anchor workspace (uses its own toolchain + solana-program version locks).
+    # Build via `cd solana && anchor build`, not via the outer cargo.
+    "solana",
+]
 # `prover/program/` (SP1 guest crate) will be added when the SP1 toolchain
 # version is pinned at M1.
-# `solana/` will be a nested Anchor workspace and excluded from this one.
 
 [workspace.package]
 version = "0.1.0-rfc.1"

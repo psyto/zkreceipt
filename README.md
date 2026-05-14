@@ -97,7 +97,7 @@ zkTempo.sol.
 | [`spec/`](./spec/) | Protocol specifications. | Draft |
 | [`light-client/`](./light-client/) | Rust crate: Simplex BFT finality verification. `no_std`. | Scaffold |
 | [`prover/`](./prover/) | Rust crate: SP1 host + (future) guest program at `prover/program/`. | Scaffold |
-| `solana/` | Anchor verifier program. | Not started |
+| [`solana/`](./solana/) | Anchor verifier program (nested workspace). | Scaffold |
 
 ## License
 
