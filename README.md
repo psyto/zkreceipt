@@ -86,6 +86,7 @@ Out of scope:
 | [`spec/verifier.md`](./spec/verifier.md) | Solana program interface; verification key; state account PDA layout |
 | [`spec/composition.md`](./spec/composition.md) | Patterns for downstream programs (mppsol_cpi, payment settlement, intent execution) |
 | [`spec/security.md`](./spec/security.md) | Threat model, validator rotation, replay protection, prover liveness |
+| [`spec/tempo-chainspec.md`](./spec/tempo-chainspec.md) | Reverse-engineered Moderato testnet observations: consensus context, 0x76 tx envelope, native stablecoin precompiles, open questions |
 
 ## Components
 
