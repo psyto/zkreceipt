@@ -8,9 +8,10 @@ exclude = [
     # Nested Anchor workspace (uses its own toolchain + solana-program version locks).
     # Build via `cd solana && anchor build`, not via the outer cargo.
     "solana",
+    # SP1 zkVM guest crate. Built via `cargo prove build` with the Succinct
+    # rustc toolchain, not via the outer cargo build. See prover/program/README.md.
+    "prover/program",
 ]
-# `prover/program/` (SP1 guest crate) will be added when the SP1 toolchain
-# version is pinned at M1.
 
 [workspace.package]
 version = "0.1.0-rfc.1"

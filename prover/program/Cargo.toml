@@ -1,0 +1,33 @@
+# SP1 zkVM guest crate. NOT a member of the outer zktempo workspace —
+# built via `cargo prove build` with the Succinct rustc toolchain, not via
+# the host's `cargo build`. See the workspace root Cargo.toml's `exclude`
+# list and `../README.md`.
+
+# Empty [workspace] table — tells Cargo this is its own workspace root,
+# stopping the auto-discovery walk that would otherwise find the outer
+# zktempo workspace (cargo's `exclude` directive doesn't fully prevent this
+# during `cargo metadata`).
+[workspace]
+
+[package]
+name = "zktempo-prover-program"
+description = "SP1 zkVM guest program for zkTempo.sol — runs zktempo-light-client inside the zkVM."
+version = "0.1.0-rfc.1"
+edition = "2021"
+license = "Apache-2.0"
+authors = ["psyto <saito.hiroyuki@gmail.com>"]
+repository = "https://github.com/mppsol/zktempo"
+
+[[bin]]
+name = "light_client"
+path = "src/light_client.rs"
+
+[dependencies]
+# Pinned to the SP1 toolchain version installed locally via `sp1up`. Keep
+# this in lockstep with `sp1up --version` output. Currently 6.2.0.
+sp1-zkvm = "=6.2.0"
+zktempo-light-client = { path = "../../light-client", default-features = false }
+# ciborium is the actively-maintained CBOR crate; serde_cbor 0.11.2 is
+# unmaintained and incompatible with modern serde_core. ciborium supports
+# no_std + alloc.
+ciborium = { version = "0.2", default-features = false }

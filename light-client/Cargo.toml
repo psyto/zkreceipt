@@ -13,6 +13,10 @@ default = ["std"]
 std = []
 
 [dependencies]
-# Intentionally minimal until Tempo's Simplex consensus details are pinned.
+# serde is used to ferry types through SP1's guest↔host boundary
+# (serde_cbor on the guest side). `alloc` feature lets us derive on
+# types containing Vec without pulling std.
+serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+
 # Future additions expected: a no_std-compatible signature crate
-# (ed25519-dalek or blst), sha2, borsh/postcard for serialization.
+# (ed25519-dalek or blst), sha2, borsh for Solana-side outputs.

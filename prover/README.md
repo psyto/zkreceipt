@@ -56,9 +56,21 @@ prover/
         └── main.rs     ← sp1_zkvm::entrypoint, calls verify_update
 ```
 
-The guest crate is omitted from this scaffold because it pulls in
-SP1-specific build tooling (`cargo prove build`) and a specific toolchain
-version. Both land once the M1 sp1-helios spike confirms versions.
+The guest crate at [`./program/`](./program/) is now scaffolded — it
+imports [`zktempo-light-client`](../light-client/) and calls
+`verify_update` inside the SP1 zkVM. It is **excluded from the outer
+zktempo Cargo workspace** (uses Succinct's rustc toolchain). Build via:
+
+```bash
+cd prover/program
+cargo prove build
+```
+
+That produces `prover/program/target/elf-compilation/riscv64im-succinct-zkvm-elf/release/light_client`.
+The host crate (this directory) does not yet consume that ELF — wiring
+up `sp1-build` in `prover/build.rs` + adding `sp1-sdk` to the host
+`Cargo.toml` is the next step (deferred to avoid the ~4-minute sp1-sdk
+compile until the host actually drives proofs).
 
 ## License
 

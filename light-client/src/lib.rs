@@ -11,6 +11,16 @@
 //! encoding, validator-set rotation rules) are confirmed. See
 //! `../../spec/light-client.md` for the protocol design and open research
 //! items.
+//!
+//! ## Composition
+//!
+//! Types here cross the SP1 guest↔host boundary:
+//! - The host serializes [`ProofInputs`] (containing [`LightClientStore`]
+//!   and [`Update`]) via `ciborium` (CBOR) and passes them to the guest.
+//! - The guest deserializes, calls [`verify_update`], and commits the
+//!   resulting [`FinalizedRoot`] as part of the proof's public outputs.
+//! - The Solana verifier program reads the public outputs and persists the
+//!   new root to its `LightClientState` PDA.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
@@ -18,9 +28,10 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
+use serde::{Deserialize, Serialize};
 
 /// A finalized Tempo state root and the block it commits to.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FinalizedRoot {
     /// Tempo block number this root was finalized at.
     pub slot: u64,
@@ -30,7 +41,7 @@ pub struct FinalizedRoot {
 
 /// Persistent light-client state. Held by the verifier (Solana PDA on the
 /// destination chain); passed into [`verify_update`] as the prior state.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LightClientStore {
     /// Most recently verified finalized root.
     pub latest: FinalizedRoot,
@@ -40,7 +51,7 @@ pub struct LightClientStore {
 
 /// A finality update: a new certificate plus optional validator-set
 /// rotation payload.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Update {
     /// New finalized header + certificate bytes. Encoding pinned in
     /// `spec/light-client.md`.
@@ -51,7 +62,7 @@ pub struct Update {
 }
 
 /// Errors returned by [`verify_update`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum VerifyError {
     /// Certificate failed signature aggregation / quorum check.
     InvalidCertificate,
@@ -63,6 +74,18 @@ pub enum VerifyError {
     InvalidValidatorSetTransition,
     /// Certificate or update bytes failed to decode.
     DecodingError,
+}
+
+/// SP1 guest input bundle. Serialized via `serde_cbor` on the host,
+/// deserialized inside the guest via `serde_cbor::from_slice` over
+/// `sp1_zkvm::io::read_vec()`. Matches the `ProofInputs` pattern in
+/// `succinctlabs/sp1-helios`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProofInputs {
+    /// Prior light-client state.
+    pub store: LightClientStore,
+    /// The finality update to verify and apply.
+    pub update: Update,
 }
 
 /// Verify a finality update against the current store. On success, returns
@@ -89,13 +112,14 @@ mod tests {
 
     #[test]
     fn types_compile() {
-        let _store = LightClientStore {
+        let store = LightClientStore {
             latest: FinalizedRoot { slot: 0, state_root: [0u8; 32] },
             validator_set_hash: [0u8; 32],
         };
-        let _update = Update {
+        let update = Update {
             certificate: Vec::new(),
             next_validator_set: None,
         };
+        let _inputs = ProofInputs { store, update };
     }
 }
