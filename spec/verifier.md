@@ -18,7 +18,7 @@ This document will specify:
 - Replay protection: monotonically increasing slot; reject stale updates.
 - Authority model: permissionless `update_light_client` (proof is authority).
 
-See the [README](./README.md) for project overview and architecture.
+See the [README](../README.md) for project overview and architecture.
 
 ## Open research items
 
