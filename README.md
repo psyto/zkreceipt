@@ -81,11 +81,11 @@ Out of scope:
 
 | Document | Purpose |
 | --- | --- |
-| [`spec/light-client.md`](./spec/light-client.md) | Simplex finality verification rules; certificate format; validator-set transitions |
-| [`spec/prover.md`](./spec/prover.md) | SP1 program contract; input/output layout; Groth16 wrapping |
-| [`spec/verifier.md`](./spec/verifier.md) | Solana program interface; verification key; state account PDA layout |
-| [`spec/composition.md`](./spec/composition.md) | Patterns for downstream programs (mppsol_cpi, payment settlement, intent execution) |
-| [`spec/security.md`](./spec/security.md) | Threat model, validator rotation, replay protection, prover liveness |
+| [`light-client.md`](./light-client.md) | Simplex finality verification rules; certificate format; validator-set transitions |
+| [`prover.md`](./prover.md) | SP1 program contract; input/output layout; Groth16 wrapping |
+| [`verifier.md`](./verifier.md) | Solana program interface; verification key; state account PDA layout |
+| [`composition.md`](./composition.md) | Patterns for downstream programs (mppsol_cpi, payment settlement, intent execution) |
+| [`security.md`](./security.md) | Threat model, validator rotation, replay protection, prover liveness |
 
 ## Companion repositories
 

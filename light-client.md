@@ -14,7 +14,7 @@ This document will specify:
 - Reference test vectors against Tempo Moderato testnet (chain ID 42431).
 - The `no_std` Rust API surface for the verification crate.
 
-See the [README](../README.md) for project overview and architecture.
+See the [README](./README.md) for project overview and architecture.
 
 ## Open research items
 

@@ -21,7 +21,7 @@ This document will specify:
   liveness, not safety (proofs still verify cryptographically).
 - **Known attack vectors and mitigations.**
 
-See the [README](../README.md) for project overview and architecture.
+See the [README](./README.md) for project overview and architecture.
 
 ## Inherited threat surface
 

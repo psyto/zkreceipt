@@ -14,7 +14,7 @@ This document will specify:
 - Prover-network vs local-proving deployment modes; cost trade-offs.
 - Verification-key versioning and rotation under SP1 upgrades.
 
-See the [README](../README.md) for project overview and architecture.
+See the [README](./README.md) for project overview and architecture.
 
 ## Open research items
 
