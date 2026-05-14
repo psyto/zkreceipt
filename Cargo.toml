@@ -2,8 +2,10 @@
 resolver = "2"
 members = [
     "light-client",
+    "prover",
 ]
-# `prover/` will be added as a workspace member when the SP1 program lands.
+# `prover/program/` (SP1 guest crate) will be added when the SP1 toolchain
+# version is pinned at M1.
 # `solana/` will be a nested Anchor workspace and excluded from this one.
 
 [workspace.package]

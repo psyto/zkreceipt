@@ -1,0 +1,16 @@
+[package]
+name = "zktempo-prover"
+description = "Off-chain prover for zkTempo.sol — generates Groth16 proofs of Tempo finality via SP1."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+zktempo-light-client = { path = "../light-client" }
+# SP1 host SDK (`sp1-sdk`), HTTP/RPC clients, and the Solana SDK will be
+# added once the SP1 toolchain version is pinned (M1 sp1-helios spike).
+
+[dev-dependencies]

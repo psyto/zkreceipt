@@ -5,3 +5,10 @@ version = 3
 [[package]]
 name = "zktempo-light-client"
 version = "0.1.0-rfc.1"
+
+[[package]]
+name = "zktempo-prover"
+version = "0.1.0-rfc.1"
+dependencies = [
+ "zktempo-light-client",
+]
