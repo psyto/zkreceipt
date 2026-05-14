@@ -1,0 +1,18 @@
+[package]
+name = "zktempo-light-client"
+description = "Simplex BFT finality verification for Tempo. no_std-compatible for SP1 zkVM guest use."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+# Intentionally minimal until Tempo's Simplex consensus details are pinned.
+# Future additions expected: a no_std-compatible signature crate
+# (ed25519-dalek or blst), sha2, borsh/postcard for serialization.

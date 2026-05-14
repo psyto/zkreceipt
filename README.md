@@ -87,14 +87,17 @@ Out of scope:
 | [`spec/composition.md`](./spec/composition.md) | Patterns for downstream programs (mppsol_cpi, payment settlement, intent execution) |
 | [`spec/security.md`](./spec/security.md) | Threat model, validator rotation, replay protection, prover liveness |
 
-## Companion repositories
+## Components
 
-- **[`zktempo/light-client`](https://github.com/zktempo/light-client)** — Rust
-  implementation of the Simplex light client.
-- **[`zktempo/prover`](https://github.com/zktempo/prover)** — SP1 program +
-  operator software.
-- **[`zktempo/solana`](https://github.com/zktempo/solana)** — Anchor verifier
-  program.
+This repository is a monorepo. Each top-level folder is one component of
+zkTempo.sol.
+
+| Folder | Purpose | Status |
+| --- | --- | --- |
+| [`spec/`](./spec/) | Protocol specifications. | Draft |
+| [`light-client/`](./light-client/) | Rust crate: Simplex BFT finality verification. `no_std`. | Scaffold |
+| `prover/` | SP1 program + off-chain operator. | Not started |
+| `solana/` | Anchor verifier program. | Not started |
 
 ## License
 
