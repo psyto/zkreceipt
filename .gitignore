@@ -1,0 +1,23 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Drafts and scratch
+/drafts/
+/scratch/
+*.draft.md
+
+# Local env
+.env
+.env.local
+
+# Build artifacts (when crates land here later)
+target/
+Cargo.lock
+node_modules/
+*.log
