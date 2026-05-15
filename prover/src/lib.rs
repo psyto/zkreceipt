@@ -124,7 +124,7 @@ mod tests {
             validator_set_hash: [0u8; 32],
         };
         let _err = ProverError::LightClientRejected(
-            zktempo_light_client::VerifyError::InvalidCertificate,
+            zktempo_light_client::VerifyError::InvalidProposerSignature,
         );
     }
 }
