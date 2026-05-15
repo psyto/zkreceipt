@@ -26,7 +26,10 @@ path = "src/light_client.rs"
 # Pinned to the SP1 toolchain version installed locally via `sp1up`. Keep
 # this in lockstep with `sp1up --version` output. Currently 6.2.0.
 sp1-zkvm = "=6.2.0"
-zktempo-light-client = { path = "../../light-client", default-features = false }
+# `default-features = false` drops `std`; `features = ["verify"]` keeps
+# the verification surface (Ed25519, signing payload, etc.) which the
+# guest needs.
+zktempo-light-client = { path = "../../light-client", default-features = false, features = ["verify"] }
 # ciborium is the actively-maintained CBOR crate; serde_cbor 0.11.2 is
 # unmaintained and incompatible with modern serde_core. ciborium supports
 # no_std + alloc.

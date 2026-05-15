@@ -9,27 +9,29 @@ repository.workspace = true
 rust-version.workspace = true
 
 [features]
-default = ["std"]
+default = ["std", "verify"]
+# Enables `std` linking. Disable for SP1 guest / BPF Solana program use.
 std = []
+# Enables the Simplex BFT verification path (verify_update, CertificateHeader,
+# Update, etc.). Pulls in ed25519-dalek + sha2 + serde-big-array.
+# Disable on consumers that need only the public-output codec
+# (e.g. the Solana verifier program which decodes the 112-byte committed
+# output but does not re-run consensus verification).
+verify = ["dep:ed25519-dalek", "dep:sha2", "dep:serde-big-array"]
 
 [dependencies]
-# serde is used to ferry types through SP1's guest↔host boundary
-# (ciborium / CBOR on the guest side). `alloc` feature lets us derive on
-# types containing Vec without pulling std.
+# Always-on. Used for the public-output codec types and the verify-gated
+# consensus types alike. `alloc` lets us derive on Vec-bearing structs.
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
-# serde's blanket impl only covers `[T; 0]..[T; 32]`; we need `[u8; 64]`
-# for Ed25519 signatures. serde-big-array adds derive support up to 64.
-serde-big-array = { version = "0.5", default-features = false }
 
-# Ed25519 signature verification for Tempo validators. The 32-byte
-# proposer pubkeys observed on Moderato (spec/tempo-chainspec.md §3.1)
-# match Ed25519 exactly. Verify-only — no signing on this path.
-ed25519-dalek = { version = "2", default-features = false }
-
-# SHA-256 for validator-set hash commitments.
-sha2 = { version = "0.10", default-features = false }
+# Verify-only deps. Ed25519 signatures, SHA-256 over validator sets,
+# serde-big-array workaround for `[u8; 64]` (serde's blanket derive caps
+# at 32 elements).
+ed25519-dalek = { version = "2", default-features = false, optional = true }
+sha2 = { version = "0.10", default-features = false, optional = true }
+serde-big-array = { version = "0.5", default-features = false, optional = true }
 
 [dev-dependencies]
 # Used in tests to verify ProofInputs round-trips through the same CBOR
-# encoding the SP1 guest uses. Production CBOR use lives in prover/program/.
+# encoding the SP1 guest uses.
 ciborium = "0.2"

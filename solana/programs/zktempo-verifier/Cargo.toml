@@ -21,3 +21,8 @@ idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
 anchor-lang = "0.32.1"
+# Codec-only import: `default-features = false` skips both `std` and
+# `verify`, so we don't drag Ed25519/curve25519-dalek into BPF. We only
+# need ProofOutputs + decode_public_output to parse the 112-byte
+# committed output from the SP1 proof.
+zktempo-light-client = { path = "../../../light-client", default-features = false }

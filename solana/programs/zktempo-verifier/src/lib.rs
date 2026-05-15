@@ -8,12 +8,22 @@
 //!
 //! ## Status
 //!
-//! Scaffold. Account layouts and instruction interfaces are pinned;
-//! instruction bodies are stubs (no Groth16 verification yet — that
-//! requires the verification key from M5 milestone). See
-//! `../../../spec/verifier.md`.
+//! **Partial implementation.** Account-state binding, slot monotonicity,
+//! and validator-set-hash matching are enforced. The Groth16 proof
+//! verification itself is `TODO` pending:
+//!
+//! 1. SP1 verification key generation (depends on `../../../prover/program/`).
+//! 2. `sol_alt_bn128_pairing` syscall wiring (e.g. via `groth16-solana`).
+//!
+//! Until these land, the program accepts any `proof: Vec<u8>` argument
+//! but **still enforces all non-cryptographic consistency checks** —
+//! sufficient for downstream integration testing (mppsol_cpi can call
+//! through) but NOT for production security.
+//!
+//! See `../../../spec/verifier.md`.
 
 use anchor_lang::prelude::*;
+use zktempo_light_client::{decode_public_output, PUBLIC_OUTPUT_LEN};
 
 declare_id!("EMDfWFhRSZT749WBBARG3K5h1PQUUCCQcgoYtUg658Yv");
 // Placeholder devnet keypair generated at scaffold time. Regenerate via
@@ -25,43 +35,80 @@ declare_id!("EMDfWFhRSZT749WBBARG3K5h1PQUUCCQcgoYtUg658Yv");
 pub mod zktempo_verifier {
     use super::*;
 
-    /// One-shot initialization. Bootstraps the light client state PDA with
-    /// the genesis validator set hash and starting finalized root.
+    /// One-shot initialization. Creates the [`LightClientState`] PDA and
+    /// seeds it with the genesis validator-set hash and starting
+    /// finalized root.
     ///
-    /// Authority: permissioned to the bootstrap caller (one-time only —
-    /// subsequent updates are permissionless).
+    /// Authority: permissioned to the bootstrap caller (one-time — the
+    /// PDA's `init` constraint prevents re-bootstrap).
     pub fn bootstrap(
-        _ctx: Context<Bootstrap>,
-        _genesis_validator_set_hash: [u8; 32],
-        _genesis_slot: u64,
-        _genesis_state_root: [u8; 32],
+        ctx: Context<Bootstrap>,
+        genesis_validator_set_hash: [u8; 32],
+        genesis_slot: u64,
+        genesis_state_root: [u8; 32],
     ) -> Result<()> {
-        // Stub: initializes the LightClientState PDA with the genesis
-        // params. Real implementation lands at M5.
-        unimplemented!("see spec/verifier.md")
+        let state = &mut ctx.accounts.light_client_state;
+        state.latest_slot = genesis_slot;
+        state.state_root = genesis_state_root;
+        state.validator_set_hash = genesis_validator_set_hash;
+        state.last_update_unix_ts = Clock::get()?.unix_timestamp;
+        state.bump = ctx.bumps.light_client_state;
+        Ok(())
     }
 
-    /// Verify a Groth16 proof + public inputs, advance the finalized state
-    /// if valid.
+    /// Verify a Groth16 proof + 112-byte committed public output, advance
+    /// the finalized state if valid.
     ///
     /// Authority: permissionless — the proof is the authority. Anyone can
-    /// pay the fee and submit; the verifier accepts the update iff the
-    /// proof verifies and the slot is strictly monotonic.
+    /// pay the fee and submit; the program accepts iff:
+    ///
+    /// 1. Public output decodes (length = `PUBLIC_OUTPUT_LEN`).
+    /// 2. `outputs.prev_root` matches the currently stored finalized state
+    ///    (binds the proof to a specific transition, prevents replay).
+    /// 3. `outputs.validator_set_hash` matches the active set in storage.
+    /// 4. `outputs.new_root.slot > state.latest_slot` (strict advance).
+    /// 5. **TODO:** Groth16 proof bytes verify against the embedded SP1
+    ///    verification key. See module docs for the dependency chain.
     pub fn update_light_client(
-        _ctx: Context<UpdateLightClient>,
-        _proof: Vec<u8>,
-        _new_slot: u64,
-        _new_state_root: [u8; 32],
-        _validator_set_hash: [u8; 32],
+        ctx: Context<UpdateLightClient>,
+        proof: Vec<u8>,
+        public_output: [u8; PUBLIC_OUTPUT_LEN],
     ) -> Result<()> {
-        // Stub: real implementation will:
-        //   1. Reconstruct public inputs from the args.
-        //   2. Invoke `sol_alt_bn128_pairing` 3x for Groth16 verification.
-        //   3. Check `new_slot > light_client_state.latest_slot`.
-        //   4. Check `validator_set_hash` matches active set (or apply a
-        //      rotation per spec/light-client.md rules).
-        //   5. Persist `(new_slot, new_state_root, last_update_unix_ts)`.
-        unimplemented!("see spec/verifier.md")
+        let state = &mut ctx.accounts.light_client_state;
+
+        // TODO: verify `proof` bytes against the embedded SP1 verification
+        // key using `sol_alt_bn128_pairing`. Without this, the program is
+        // structurally complete but cryptographically unauthenticated.
+        let _ = proof;
+
+        // (1) Decode the proof's committed public outputs.
+        let outputs = decode_public_output(&public_output)
+            .map_err(|_| error!(ZkTempoError::InvalidPublicOutput))?;
+
+        // (2) Bind: proof must transition FROM the current finalized state.
+        require!(
+            outputs.prev_root.slot == state.latest_slot
+                && outputs.prev_root.state_root == state.state_root,
+            ZkTempoError::StateBindingMismatch
+        );
+
+        // (3) Validator-set hash binding.
+        require!(
+            outputs.validator_set_hash == state.validator_set_hash,
+            ZkTempoError::StaleValidatorSet
+        );
+
+        // (4) Strict slot advance.
+        require!(
+            outputs.new_root.slot > state.latest_slot,
+            ZkTempoError::NonMonotonicSlot
+        );
+
+        // (5) Commit.
+        state.latest_slot = outputs.new_root.slot;
+        state.state_root = outputs.new_root.state_root;
+        state.last_update_unix_ts = Clock::get()?.unix_timestamp;
+        Ok(())
     }
 }
 
@@ -122,10 +169,12 @@ pub struct UpdateLightClient<'info> {
 pub enum ZkTempoError {
     #[msg("Groth16 proof verification failed")]
     InvalidProof,
+    #[msg("Committed public output bytes failed to decode")]
+    InvalidPublicOutput,
+    #[msg("Proof's prev_root does not match the current finalized state")]
+    StateBindingMismatch,
+    #[msg("Validator set hash in proof does not match the active set")]
+    StaleValidatorSet,
     #[msg("New slot must be strictly greater than the latest finalized slot")]
     NonMonotonicSlot,
-    #[msg("Validator set hash does not match the active set")]
-    StaleValidatorSet,
-    #[msg("Public inputs do not match proof commitments")]
-    PublicInputMismatch,
 }

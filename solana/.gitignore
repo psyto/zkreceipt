@@ -3,10 +3,8 @@
 target/
 test-ledger/
 
-# Cargo.lock excluded until `anchor build` succeeds end-to-end with the
-# committed toolchain. Re-include and commit once a clean lockfile is
-# produced (Anchor convention is to commit it for reproducibility).
-Cargo.lock
+# Cargo.lock IS committed — anchor build verified working with Solana
+# CLI 3.1.14 / platform-tools v1.52 / rustc 1.89. Reproducibility wins.
 
 # Generated IDL
 .idl/
