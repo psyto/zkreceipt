@@ -75,6 +75,34 @@ pub fn mapping_slot(key: Address, mapping_index: u64) -> B256 {
     keccak256(buf)
 }
 
+/// Verify an account proof: bind `account` (including its `storage_root`) to
+/// the authenticated `state_root`. Until this passes, nothing about the
+/// account — not even its `storage_root` — can be trusted.
+pub fn verify_account(
+    state_root: B256,
+    address: Address,
+    account: &TrieAccount,
+    proof: &[Bytes],
+) -> Result<(), VerifyError> {
+    let key = Nibbles::unpack(keccak256(address.as_slice()));
+    let value = alloy_rlp::encode(account);
+    verify_proof(state_root, key, Some(value), proof).map_err(|_| VerifyError::AccountProof)
+}
+
+/// Verify a storage proof against a (now-trusted) `storage_root`. `value` is the
+/// claimed slot value, or `None` to prove the slot is empty (exclusion). Storage
+/// trie values are `RLP(U256)`, which trims leading zeros.
+pub fn verify_storage_slot(
+    storage_root: B256,
+    slot: B256,
+    value: Option<U256>,
+    proof: &[Bytes],
+) -> Result<(), VerifyError> {
+    let key = Nibbles::unpack(keccak256(slot.as_slice()));
+    let expected = value.map(alloy_rlp::encode);
+    verify_proof(storage_root, key, expected, proof).map_err(|_| VerifyError::StorageProof)
+}
+
 /// Verify that, in the Tempo state committed to by `state_root`, the settlement
 /// contract credited `recipient` at least `price`, via `paidTo[recipient]`.
 ///
@@ -93,27 +121,17 @@ pub fn verify_payment(
     storage_proof: &[Bytes],
     price: U256,
 ) -> Result<VerifiedPayment, VerifyError> {
-    // 1. Account proof: bind the settlement account (incl. its storage_root) to
-    //    the authenticated state_root. Until this passes we trust nothing about
-    //    the account — not even its storage_root.
-    let account_key = Nibbles::unpack(keccak256(settlement.as_slice()));
-    let account_rlp = alloy_rlp::encode(account);
-    verify_proof(state_root, account_key, Some(account_rlp), account_proof)
-        .map_err(|_| VerifyError::AccountProof)?;
+    // 1. Bind the settlement account (incl. its storage_root) to state_root.
+    verify_account(state_root, settlement, account, account_proof)?;
 
-    // 2. Storage proof: bind paidTo[recipient] == credited_amount to the
-    //    now-trusted storage_root. Storage trie values are RLP(U256), which
-    //    trims leading zeros.
+    // 2. Bind paidTo[recipient] == credited_amount to the now-trusted storage_root.
     let slot = mapping_slot(recipient, mapping_index);
-    let storage_key = Nibbles::unpack(keccak256(slot.as_slice()));
-    let value_rlp = alloy_rlp::encode(credited_amount);
-    verify_proof(
+    verify_storage_slot(
         account.storage_root,
-        storage_key,
-        Some(value_rlp),
+        slot,
+        Some(credited_amount),
         storage_proof,
-    )
-    .map_err(|_| VerifyError::StorageProof)?;
+    )?;
 
     // 3. Sufficiency: real payment, but is it enough for the quoted price?
     if credited_amount < price {
