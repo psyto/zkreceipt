@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "light-client",
     "prover",
+    "mpt-verify",
 ]
 exclude = [
     # Nested Anchor workspace (uses its own toolchain + solana-program version locks).

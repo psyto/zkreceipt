@@ -1,0 +1,17 @@
+[package]
+name = "zktempo-mpt-verify"
+description = "MPT inclusion verification for Tempo (Reth/Ethereum-style) state roots. Lets an x402 receiver confirm a payment landed on Tempo by verifying an EIP-1186 account+storage proof against a zktempo-authenticated state_root — no facilitator."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+# Off-chain receiver-side crate (not BPF / not the SP1 guest), so std is fine.
+# `rlp` feature gives Encodable/Decodable impls for U256/B256/Address.
+alloy-primitives = { version = "1.0", features = ["rlp"] }
+alloy-rlp = { version = "0.3", features = ["derive"] }
+# MPT proof verification + trie building (HashBuilder/ProofRetainer used in tests).
+alloy-trie = "0.9"
