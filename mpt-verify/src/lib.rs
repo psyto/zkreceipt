@@ -44,6 +44,7 @@ pub struct VerifiedPayment {
 /// code_hash]`. The caller supplies the claimed account; the account proof is
 /// what actually binds it (including `storage_root`) to the `state_root`.
 #[derive(Debug, Clone, PartialEq, Eq, RlpEncodable)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TrieAccount {
     pub nonce: u64,
     pub balance: U256,
@@ -154,15 +155,18 @@ pub fn rlp_value(v: impl Encodable) -> Vec<u8> {
     alloy_rlp::encode(v)
 }
 
-#[cfg(test)]
-mod tests {
+/// Test/fixture helpers: build real two-level tries and payment fixtures.
+/// Available to this crate's own tests and to downstream crates (the
+/// x402-receiver) via the `testkit` feature.
+#[cfg(any(test, feature = "testkit"))]
+pub mod testkit {
     use super::*;
     use alloy_trie::{proof::ProofRetainer, HashBuilder};
 
     /// Build a trie from `(hashed_key, rlp_value)` entries and return
     /// `(root, proof_for_target)` — a real trie root with branch nodes so the
     /// proof exercises actual traversal, not a single inlined leaf.
-    fn build_trie(mut entries: Vec<(B256, Vec<u8>)>, target: B256) -> (B256, Vec<Bytes>) {
+    pub fn build_trie(mut entries: Vec<(B256, Vec<u8>)>, target: B256) -> (B256, Vec<Bytes>) {
         // Leaves must be added in ascending nibble order.
         entries.sort_by(|a, b| Nibbles::unpack(a.0).cmp(&Nibbles::unpack(b.0)));
         let retainer = ProofRetainer::new(vec![Nibbles::unpack(target)]);
@@ -185,20 +189,20 @@ mod tests {
         B256::repeat_byte(byte)
     }
 
-    struct Fixture {
-        state_root: B256,
-        settlement: Address,
-        account: TrieAccount,
-        account_proof: Vec<Bytes>,
-        recipient: Address,
-        amount: U256,
-        storage_proof: Vec<Bytes>,
-        mapping_index: u64,
+    /// A self-contained payment fixture: a settlement contract whose
+    /// `paidTo[recipient] = amount`, embedded in a real two-level trie.
+    pub struct PaymentFixture {
+        pub state_root: B256,
+        pub settlement: Address,
+        pub account: TrieAccount,
+        pub account_proof: Vec<Bytes>,
+        pub recipient: Address,
+        pub amount: U256,
+        pub storage_proof: Vec<Bytes>,
+        pub mapping_index: u64,
     }
 
-    /// Construct a self-contained, network-free fixture: a settlement contract
-    /// whose `paidTo[recipient] = amount`, embedded in a real two-level trie.
-    fn fixture(amount: U256) -> Fixture {
+    pub fn payment_fixture(amount: U256) -> PaymentFixture {
         let settlement = Address::repeat_byte(0xa1);
         let recipient = Address::repeat_byte(0xb2);
         let mapping_index = 3u64;
@@ -232,7 +236,7 @@ mod tests {
             account_key,
         );
 
-        Fixture {
+        PaymentFixture {
             state_root,
             settlement,
             account,
@@ -243,6 +247,12 @@ mod tests {
             mapping_index,
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::testkit::payment_fixture as fixture;
 
     #[test]
     fn verifies_a_real_payment() {

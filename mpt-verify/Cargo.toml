@@ -8,6 +8,14 @@ authors.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
+[features]
+# Expose the trie-building / payment-fixture helpers to downstream test code
+# (e.g. the x402-receiver crate's tests).
+testkit = []
+# Derive serde on the wire-facing types (TrieAccount) for the receiver's proof
+# envelope.
+serde = ["dep:serde", "alloy-primitives/serde"]
+
 [dependencies]
 # Off-chain receiver-side crate (not BPF / not the SP1 guest), so std is fine.
 # `rlp` feature gives Encodable/Decodable impls for U256/B256/Address.
@@ -15,6 +23,7 @@ alloy-primitives = { version = "1.0", features = ["rlp"] }
 alloy-rlp = { version = "0.3", features = ["derive"] }
 # MPT proof verification + trie building (HashBuilder/ProofRetainer used in tests).
 alloy-trie = "0.9"
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 # Parse the real Tempo Moderato eth_getProof fixture in tests/.

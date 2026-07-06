@@ -1,0 +1,20 @@
+[package]
+name = "zktempo-x402-receiver"
+description = "Transport-agnostic x402 receiver core: issue 402 payment challenges and admit requests by verifying a Tempo MPT payment proof against a zktempo-authenticated state_root. No facilitator."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+alloy-primitives = { version = "1.0", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+# The MPT verifier; `serde` so the proof envelope can (de)serialize TrieAccount.
+zktempo-mpt-verify = { path = "../mpt-verify", features = ["serde"] }
+
+[dev-dependencies]
+# `testkit` gives us real payment fixtures to drive end-to-end tests.
+zktempo-mpt-verify = { path = "../mpt-verify", features = ["serde", "testkit"] }
+serde_json = "1"
