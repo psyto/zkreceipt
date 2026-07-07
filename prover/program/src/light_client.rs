@@ -1,14 +1,14 @@
-//! SP1 zkVM guest program for zkTempo.sol — the `light_client` binary.
+//! SP1 zkVM guest program for zkReceipt — the `light_client` binary.
 //!
 //! Reads a serde_cbor-encoded [`ProofInputs`] from the SP1 host, calls
-//! [`verify_update`] from `zktempo-light-client`, and commits the
+//! [`verify_update`] from `zkreceipt-light-client`, and commits the
 //! resulting finalized root + validator-set hash as the proof's public
 //! outputs.
 //!
 //! Structurally mirrors `sp1-helios/program/src/light_client.rs` — the
 //! canonical reference for an SP1 light-client guest. The differences:
 //!
-//! - **Consensus engine.** Calls `zktempo_light_client::verify_update`
+//! - **Consensus engine.** Calls `zkreceipt_light_client::verify_update`
 //!   instead of `helios_consensus_core::verify_finality_update` etc.
 //! - **Output encoding.** Commits raw little-endian bytes for a
 //!   Solana-program consumer rather than ABI-encoded structs for an EVM
@@ -17,7 +17,7 @@
 //!
 //! ## Status
 //!
-//! Scaffold. The body of `verify_update` in `zktempo-light-client` is
+//! Scaffold. The body of `verify_update` in `zkreceipt-light-client` is
 //! `unimplemented!()` until Tempo's Simplex BFT details are pinned. This
 //! guest will panic at runtime; it exists to make the call chain compile
 //! and document the intended structure.
@@ -26,7 +26,7 @@
 
 sp1_zkvm::entrypoint!(main);
 
-use zktempo_light_client::{encode_public_output, verify_update, ProofInputs, ProofOutputs};
+use zkreceipt_light_client::{encode_public_output, verify_update, ProofInputs, ProofOutputs};
 
 pub fn main() {
     // 1. Read host-supplied inputs (CBOR over a single read_vec). Using
@@ -47,7 +47,7 @@ pub fn main() {
         .expect("finality verification failed");
 
     // 4. Commit public outputs via the canonical encoder. The byte layout
-    //    is defined and tested in `zktempo_light_client::{encode,decode}_public_output`
+    //    is defined and tested in `zkreceipt_light_client::{encode,decode}_public_output`
     //    so guest + Solana verifier share one source of truth.
     let outputs = ProofOutputs {
         new_root,

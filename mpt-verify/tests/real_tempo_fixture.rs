@@ -16,7 +16,7 @@
 
 use alloy_primitives::{hex, Address, Bytes, B256, U256};
 use serde_json::Value;
-use zktempo_mpt_verify::{verify_account, verify_storage_slot, TrieAccount};
+use zkreceipt_mpt_verify::{verify_account, verify_storage_slot, TrieAccount};
 
 fn load() -> Value {
     let raw = include_str!("fixtures/tempo_moderato_alphausd.json");

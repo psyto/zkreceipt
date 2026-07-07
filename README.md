@@ -1,8 +1,8 @@
-# zkTempo.sol
+# zkReceipt
 
 **ZK-verified Tempo finality, settled on Solana.**
 
-zkTempo.sol is a cross-VM settlement primitive: a zero-knowledge light client that
+zkReceipt is a cross-VM settlement primitive: a zero-knowledge light client that
 proves Tempo block finality and makes those proofs verifiable inside Solana programs.
 Downstream consumers — payment session protocols, cross-chain intent settlement,
 agent commerce rails — can confirm on Solana that a fact about Tempo is true
@@ -23,7 +23,7 @@ Cross-chain finality attestation today depends on social trust:
 - **Optimistic bridges** trust that someone will challenge a fraudulent claim within
   the window.
 
-zkTempo.sol replaces social trust with cryptographic proof. A Solana program can
+zkReceipt replaces social trust with cryptographic proof. A Solana program can
 verify Tempo finality from a ~200-byte Groth16 proof using `alt_bn128` syscalls,
 with no external attestation required.
 
@@ -32,7 +32,7 @@ with no external attestation required.
 ```
    Tempo                ZK Prover (off-chain)         Solana
  ┌─────────┐         ┌──────────────────────┐      ┌────────────────┐
- │ Simplex │  cert   │ Tempo light client   │ proof│ zkTempo        │
+ │ Simplex │  cert   │ Tempo light client   │ proof│ zkReceipt        │
  │ BFT     ├────────►│ inside SP1 zkVM      ├─────►│ verifier (PDA) │
  │ finality│         │ Groth16 wrap (BN254) │      │ alt_bn128      │
  └─────────┘         └──────────────────────┘      └────────┬───────┘
@@ -69,10 +69,10 @@ In scope:
 
 Out of scope:
 
-- General-purpose EVM→Solana state proving — zkTempo.sol is specific to Tempo's
+- General-purpose EVM→Solana state proving — zkReceipt is specific to Tempo's
   Simplex consensus. Other Reth-based L1s require separate consensus
   implementations.
-- Asset bridging — zkTempo.sol proves finality only. Token semantics are
+- Asset bridging — zkReceipt proves finality only. Token semantics are
   downstream concerns.
 - Liveness guarantees — proofs must be produced by an external operator; the
   verifier is permissionless to call but does not guarantee timely updates.
@@ -91,7 +91,7 @@ Out of scope:
 ## Components
 
 This repository is a monorepo. Each top-level folder is one component of
-zkTempo.sol.
+zkReceipt.
 
 | Folder | Purpose | Status |
 | --- | --- | --- |

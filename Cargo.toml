@@ -20,7 +20,7 @@ version = "0.1.0-rfc.1"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["psyto <saito.hiroyuki@gmail.com>"]
-repository = "https://github.com/mppsol/zktempo"
+repository = "https://github.com/psyto/zkreceipt"
 rust-version = "1.75"
 
 [workspace.dependencies]

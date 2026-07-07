@@ -1,6 +1,6 @@
-# zktempo-prover-program
+# zkreceipt-prover-program
 
-SP1 zkVM **guest crate** for zkTempo.sol. Compiled to a RISC-V ELF via
+SP1 zkVM **guest crate** for zkReceipt. Compiled to a RISC-V ELF via
 `cargo prove build`; the resulting binary is what SP1's prover network
 runs to generate Groth16 proofs of Tempo finality.
 
@@ -12,7 +12,7 @@ runs to generate Groth16 proofs of Tempo finality.
 ProofInputs (CBOR)
   → sp1_zkvm::io::read_vec
   → serde_cbor::from_slice
-  → zktempo_light_client::verify_update    ← unimplemented!() at the leaf
+  → zkreceipt_light_client::verify_update    ← unimplemented!() at the leaf
   → sp1_zkvm::io::commit_slice (112-byte public output)
 ```
 
@@ -23,7 +23,7 @@ leaf.
 
 ## Important: NOT a workspace member
 
-This crate is **excluded** from the outer zktempo Cargo workspace (see
+This crate is **excluded** from the outer zkreceipt Cargo workspace (see
 the root `Cargo.toml`'s `exclude = ["prover/program"]`). It is built only
 via the Succinct rustc toolchain:
 

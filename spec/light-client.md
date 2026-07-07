@@ -1,6 +1,6 @@
 # Light client — Simplex BFT finality verification
 
-> **Status: stub.** To be drafted alongside the `zktempo/light-client` Rust
+> **Status: stub.** To be drafted alongside the `zkreceipt/light-client` Rust
 > crate, after the `tempoxyz/tempo-foundry` audit pins down Tempo's exact
 > Simplex implementation.
 

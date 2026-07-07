@@ -6,13 +6,13 @@
 //!
 //!   - **T0 (demo):** [`FixedAnchor`] — a state_root trusted out of band.
 //!   - **T1/T2:** [`LightClientAnchor`] — a state_root read from the on-chain
-//!     zktempo `LightClientState` PDA (single-proposer today; BFT quorum +
+//!     zkreceipt `LightClientState` PDA (single-proposer today; BFT quorum +
 //!     Groth16 once Tempo §3.3 / SP1 vkey land). Swapping the rung changes
 //!     nothing in the receiver.
 
 use alloy_primitives::B256;
 
-/// Rust mirror of the on-chain `zktempo-verifier` `LightClientState` account.
+/// Rust mirror of the on-chain `zkreceipt-verifier` `LightClientState` account.
 ///
 /// Anchor layout (little-endian, after the 8-byte account discriminator):
 /// `latest_slot: u64 | state_root: [u8;32] | validator_set_hash: [u8;32] |
@@ -36,7 +36,7 @@ pub enum DecodeError {
 }
 
 /// Decode the raw Solana account data (as returned by `getAccountInfo`) of the
-/// zktempo `LightClientState` PDA. The caller does the RPC fetch; this is the
+/// zkreceipt `LightClientState` PDA. The caller does the RPC fetch; this is the
 /// pure, testable decode that mirrors the on-chain layout.
 pub fn decode_light_client_state(data: &[u8]) -> Result<LightClientState, DecodeError> {
     if data.len() < 8 + BODY_LEN {
@@ -78,7 +78,7 @@ impl StateRootSource for FixedAnchor {
     }
 }
 
-/// T1/T2 anchor: backed by a decoded zktempo PDA. The PDA holds exactly one
+/// T1/T2 anchor: backed by a decoded zkreceipt PDA. The PDA holds exactly one
 /// finalized `(latest_slot, state_root)`; a proof is honored only if it targets
 /// that slot.
 #[derive(Debug, Clone)]

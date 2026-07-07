@@ -2386,7 +2386,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zktempo-light-client"
+name = "zkreceipt-light-client"
 version = "0.1.0-rfc.1"
 dependencies = [
  "ciborium",
@@ -2397,7 +2397,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zktempo-mpt-verify"
+name = "zkreceipt-mpt-verify"
 version = "0.1.0-rfc.1"
 dependencies = [
  "alloy-primitives",
@@ -2408,20 +2408,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "zktempo-prover"
+name = "zkreceipt-prover"
 version = "0.1.0-rfc.1"
 dependencies = [
- "zktempo-light-client",
+ "zkreceipt-light-client",
 ]
 
 [[package]]
-name = "zktempo-x402-receiver"
+name = "zkreceipt-x402-receiver"
 version = "0.1.0-rfc.1"
 dependencies = [
  "alloy-primitives",
  "serde",
  "serde_json",
- "zktempo-mpt-verify",
+ "zkreceipt-mpt-verify",
 ]
 
 [[package]]

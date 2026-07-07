@@ -1,7 +1,7 @@
-# zktempo-prover
+# zkreceipt-prover
 
-Off-chain prover for zkTempo.sol. Generates Groth16 proofs of Tempo
-finality by running [`zktempo-light-client`](../light-client/) inside the
+Off-chain prover for zkReceipt. Generates Groth16 proofs of Tempo
+finality by running [`zkreceipt-light-client`](../light-client/) inside the
 SP1 zkVM guest, then wrapping the resulting STARK in Groth16 for cheap
 verification on Solana via `alt_bn128` syscalls.
 
@@ -20,7 +20,7 @@ See [`../spec/prover.md`](../spec/prover.md).
 
 ```
                           ┌─────────────────────┐
-   LightClientStore       │ zktempo-prover      │
+   LightClientStore       │ zkreceipt-prover      │
    Update              ──▶│ host crate (this)   │
                           │                     │
                           │   reads Tempo RPC   │
@@ -57,9 +57,9 @@ prover/
 ```
 
 The guest crate at [`./program/`](./program/) is now scaffolded — it
-imports [`zktempo-light-client`](../light-client/) and calls
+imports [`zkreceipt-light-client`](../light-client/) and calls
 `verify_update` inside the SP1 zkVM. It is **excluded from the outer
-zktempo Cargo workspace** (uses Succinct's rustc toolchain). Build via:
+zkreceipt Cargo workspace** (uses Succinct's rustc toolchain). Build via:
 
 ```bash
 cd prover/program

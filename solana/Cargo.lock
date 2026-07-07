@@ -1613,18 +1613,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b97154e67e32c85465826e8bcc1c59429aaaf107c1e4a9e53c8d8ccd5eff88d0"
 
 [[package]]
-name = "zktempo-light-client"
+name = "zkreceipt-light-client"
 version = "0.1.0-rfc.1"
 dependencies = [
  "serde",
 ]
 
 [[package]]
-name = "zktempo-verifier"
+name = "zkreceipt-verifier"
 version = "0.1.0-rfc.1"
 dependencies = [
  "anchor-lang",
- "zktempo-light-client",
+ "zkreceipt-light-client",
 ]
 
 [[package]]

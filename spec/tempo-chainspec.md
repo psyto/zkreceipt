@@ -82,7 +82,7 @@ The `consensusContext` exposes the proposer but does **not** include
 aggregate quorum signatures. Where these signatures actually live (a
 non-RPC-exposed header field? a separate tx? embedded in
 `parentBeaconBlockRoot` which is also zero?) is the **central unblocked
-question for zkTempo's light-client implementation**.
+question for zkReceipt's light-client implementation**.
 
 ## 4. Transactions
 
@@ -212,12 +212,12 @@ exposed** on Moderato (return `-32601 method not found`):
 `debug_*` methods exist but require parameters (`-32602` not `-32601`);
 not deeply probed in this draft.
 
-## 11. Implications for zkTempo light client
+## 11. Implications for zkReceipt light client
 
-The findings here directly inform `zktempo-light-client`:
+The findings here directly inform `zkreceipt-light-client`:
 
 1. **Validator signature scheme is Ed25519** (32-byte proposer pubkeys).
-   `zktempo-light-client` should depend on `ed25519-dalek` (or a `no_std`
+   `zkreceipt-light-client` should depend on `ed25519-dalek` (or a `no_std`
    equivalent like `ed25519-zebra`), not on a BLS crate.
 2. **Per-epoch validator rotation, ~3.3-hour cadence.** The light
    client's `Update` must carry validator-set rotation payloads at every

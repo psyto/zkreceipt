@@ -1,4 +1,4 @@
-//! # zktempo-light-client
+//! # zkreceipt-light-client
 //!
 //! Simplex BFT finality verification for Tempo. Designed to run inside
 //! SP1's zkVM guest, on native Rust hosts, and (with `verify` disabled)
