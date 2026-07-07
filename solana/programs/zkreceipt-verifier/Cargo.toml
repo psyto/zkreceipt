@@ -26,3 +26,6 @@ anchor-lang = "0.32.1"
 # need ProofOutputs + decode_public_output to parse the 112-byte
 # committed output from the SP1 proof.
 zkreceipt-light-client = { path = "../../../light-client", default-features = false }
+# SP1 Groth16 proof verification via Solana's BN254 (alt_bn128) syscalls.
+# Ships GROTH16_VK_5_0_0_BYTES (SP1 v5.0.0) + verify_proof(); < 200K CU.
+sp1-solana = "0.1.0"
