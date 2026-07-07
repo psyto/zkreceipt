@@ -31,6 +31,35 @@ declare_id!("EMDfWFhRSZT749WBBARG3K5h1PQUUCCQcgoYtUg658Yv");
 // `anchor keys sync` once the real deployment keypair is committed (or
 // kept in a secrets manager — never in git).
 
+/// SP1 verification-key hash for the zkReceipt finality guest, as printed by
+/// `cargo prove vkey` on `prover/program`.
+///
+/// **PLACEHOLDER.** The guest's `verify_update` leaf is not yet complete (BFT
+/// aggregate quorum signature pending — see `spec/light-client.md`), so no real
+/// vkey exists yet. Until this is replaced with the real hash,
+/// [`update_light_client`] verifies against a non-existent key and therefore
+/// **rejects every proof** — the correct fail-closed default for a trustless
+/// verifier. The verification machinery itself is real and exercised by the
+/// tests against SP1's own proof fixture.
+const ZKRECEIPT_VKEY_HASH: &str =
+    "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+/// Verify an SP1 Groth16 `proof` over the committed `public_output` bytes
+/// against `vkey_hash`, using Solana's BN254 (`alt_bn128`) syscalls (~200K CU).
+///
+/// Isolated from the instruction so it can be unit-tested directly. Returns
+/// [`ZkReceiptError::InvalidProof`] on any failure — the verifier is
+/// fail-closed: malformed input, wrong vkey, or an invalid proof all reject.
+fn verify_sp1_groth16(proof: &[u8], public_output: &[u8], vkey_hash: &str) -> Result<()> {
+    sp1_solana::verify_proof(
+        proof,
+        public_output,
+        vkey_hash,
+        sp1_solana::GROTH16_VK_5_0_0_BYTES,
+    )
+    .map_err(|_| error!(ZkReceiptError::InvalidProof))
+}
+
 #[program]
 pub mod zkreceipt_verifier {
     use super::*;
@@ -76,10 +105,13 @@ pub mod zkreceipt_verifier {
     ) -> Result<()> {
         let state = &mut ctx.accounts.light_client_state;
 
-        // TODO: verify `proof` bytes against the embedded SP1 verification
-        // key using `sol_alt_bn128_pairing`. Without this, the program is
-        // structurally complete but cryptographically unauthenticated.
-        let _ = proof;
+        // (0) Cryptographic authentication. The Groth16 proof must verify
+        // against the zkReceipt guest's SP1 verification key over exactly the
+        // committed `public_output` bytes, using Solana's BN254 (alt_bn128)
+        // syscalls (~200K CU). This is what makes the update trustless: no
+        // valid proof, no state advance. Runs first so no state is touched on
+        // an unauthenticated call.
+        verify_sp1_groth16(&proof, &public_output, ZKRECEIPT_VKEY_HASH)?;
 
         // (1) Decode the proof's committed public outputs.
         let outputs = decode_public_output(&public_output)
@@ -177,4 +209,31 @@ pub enum ZkReceiptError {
     StaleValidatorSet,
     #[msg("New slot must be strictly greater than the latest finalized slot")]
     NonMonotonicSlot,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A well-formed-length but invalid proof must be REJECTED — never accepted,
+    // never a panic. Exercises the real sp1-solana Groth16 path natively
+    // (solana-bn254's host implementation of the BN254 ops), proving the
+    // verification machinery runs and fail-closes. The positive path (a valid
+    // proof → Ok) needs zkReceipt's own guest proof and lands in Stage 2.
+    #[test]
+    fn rejects_invalid_proof() {
+        let proof = vec![0u8; 260];
+        let public_output = [0u8; PUBLIC_OUTPUT_LEN];
+        let fib_hash = "0x00bb9e57314d7ee4f65a4b9fb46fbeae0495f2015c5a8a737333680ce6bb424e";
+        assert!(verify_sp1_groth16(&proof, &public_output, fib_hash).is_err());
+    }
+
+    // The placeholder guest vkey hash must reject everything until the real
+    // guest vkey is embedded — the deployed default is fail-closed.
+    #[test]
+    fn placeholder_vkey_is_fail_closed() {
+        let proof = vec![0u8; 260];
+        let public_output = [0u8; PUBLIC_OUTPUT_LEN];
+        assert!(verify_sp1_groth16(&proof, &public_output, ZKRECEIPT_VKEY_HASH).is_err());
+    }
 }
