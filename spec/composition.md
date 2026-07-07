@@ -1,10 +1,12 @@
 # Composition: mppsol_cpi integration
 
 This document specifies how [mppsol_cpi] consumes zkReceipt finality proofs
-to authorize Solana-side settlement of payments originated on Tempo. It is
-addressed to authors of downstream consumer programs — merchant treasuries,
-intent settlers, agent commerce rails — that need to verify a Tempo payment
-occurred before releasing value on Solana.
+to authorize Solana-side settlement of payments originated on a source chain.
+It is addressed to authors of downstream consumer programs — merchant
+treasuries, intent settlers, agent commerce rails — that need to verify a
+source-chain payment occurred before releasing value on Solana. The worked
+example below uses **Tempo** (the implemented source); the pattern is identical
+for any Ethereum-MPT source.
 
 [mppsol_cpi]: https://github.com/mppsol/cpi
 
@@ -17,14 +19,14 @@ assumption is: the server holding the key has correctly observed the payment.
 zkReceipt introduces a parallel verification path that replaces this with
 two cryptographic proofs:
 
-1. **Finality** — a specific Tempo block was finalized by Simplex BFT
-   consensus. Proved by Groth16 verification at the zkReceipt verifier PDA.
+1. **Finality** — a specific source-chain block was finalized (Simplex BFT,
+   for the Tempo source). Proved by Groth16 verification at the zkReceipt verifier PDA.
 2. **Inclusion** — a specific storage slot or log entry exists in that block's
    state root. Proved by Merkle Patricia inclusion proof, verified inside
    mppsol_cpi.
 
-No external attestation, no permissioned signer. Tempo's validator set is the
-only off-Solana trust anchor.
+No external attestation, no permissioned signer. The source chain's validator
+set is the only off-Solana trust anchor.
 
 ## Data layout
 

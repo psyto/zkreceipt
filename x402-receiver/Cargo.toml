@@ -1,6 +1,6 @@
 [package]
 name = "zkreceipt-x402-receiver"
-description = "Transport-agnostic x402 receiver core: issue 402 payment challenges and admit requests by verifying a Tempo MPT payment proof against a zkreceipt-authenticated state_root. No facilitator."
+description = "Transport-agnostic x402 receiver core: issue 402 payment challenges and admit requests by verifying an MPT payment proof against a zkReceipt-anchored state_root. No facilitator. Source-agnostic."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

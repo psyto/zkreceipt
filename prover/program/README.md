@@ -2,7 +2,7 @@
 
 SP1 zkVM **guest crate** for zkReceipt. Compiled to a RISC-V ELF via
 `cargo prove build`; the resulting binary is what SP1's prover network
-runs to generate Groth16 proofs of Tempo finality.
+runs to generate Groth16 proofs of source-chain finality.
 
 ## Status
 
@@ -12,14 +12,15 @@ runs to generate Groth16 proofs of Tempo finality.
 ProofInputs (CBOR)
   → sp1_zkvm::io::read_vec
   → serde_cbor::from_slice
-  → zkreceipt_light_client::verify_update    ← unimplemented!() at the leaf
+  → zkreceipt_light_client::verify_update    ← BFT quorum aggregate still stubbed
   → sp1_zkvm::io::commit_slice (112-byte public output)
 ```
 
-The leaf `verify_update` body is `unimplemented!()` pending Tempo's
-Simplex BFT details (see [`../../spec/light-client.md`](../../spec/light-client.md)).
-Compiling this guest right now succeeds; running it would panic at the
-leaf.
+`verify_update` verifies the Ed25519 proposer signature + structural checks,
+then hits `unimplemented!()` at the **BFT aggregate quorum signature** (blocked
+on Tempo's Simplex format — see
+[`../../spec/light-client.md`](../../spec/light-client.md)). Compiling this guest
+succeeds; a real run still panics at that leaf.
 
 ## Important: NOT a workspace member
 

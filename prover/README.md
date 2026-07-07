@@ -1,6 +1,6 @@
 # zkreceipt-prover
 
-Off-chain prover for zkReceipt. Generates Groth16 proofs of Tempo
+Off-chain prover for zkReceipt. Generates Groth16 proofs of source-chain
 finality by running [`zkreceipt-light-client`](../light-client/) inside the
 SP1 zkVM guest, then wrapping the resulting STARK in Groth16 for cheap
 verification on Solana via `alt_bn128` syscalls.
@@ -23,7 +23,7 @@ See [`../spec/prover.md`](../spec/prover.md).
    LightClientStore       │ zkreceipt-prover      │
    Update              ──▶│ host crate (this)   │
                           │                     │
-                          │   reads Tempo RPC   │
+                          │   reads source RPC  │
                           │   loads guest       │  ┌─────────────────┐
                           │   ─────────────────────▶ SP1 zkVM guest  │
                           │                     │  │  ./program/     │

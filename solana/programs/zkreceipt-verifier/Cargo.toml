@@ -1,6 +1,6 @@
 [package]
 name = "zkreceipt-verifier"
-description = "Solana Anchor program: verifies zkReceipt Groth16 proofs of Tempo finality via alt_bn128 syscalls."
+description = "Solana Anchor program: verifies zkReceipt Groth16 proofs of source-chain finality via alt_bn128 syscalls, anchoring the state_root on Solana."
 version = "0.1.0-rfc.1"
 edition = "2021"
 license = "Apache-2.0"

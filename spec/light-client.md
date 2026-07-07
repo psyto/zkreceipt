@@ -1,8 +1,9 @@
-# Light client — Simplex BFT finality verification
+# Light client — source finality verification (Simplex BFT, Tempo source)
 
-> **Status: stub.** To be drafted alongside the `zkreceipt/light-client` Rust
-> crate, after the `tempoxyz/tempo-foundry` audit pins down Tempo's exact
-> Simplex implementation.
+> **Status: stub.** Covers the **Tempo** source (Simplex BFT). zkReceipt runs
+> one consensus light client per source chain — the Ethereum sync-committee
+> source would get a sibling spec. To be drafted alongside the `light-client`
+> crate, once Tempo's exact Simplex/quorum format is pinned down.
 
 This document will specify:
 
