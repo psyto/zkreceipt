@@ -5,6 +5,10 @@
 > available. No insider information. Independent confirmation by the
 > Tempo team is welcome and explicitly requested in the "Open questions"
 > section.
+>
+> **Scope:** this chainspec covers **Tempo**, the first source chain zkReceipt
+> supports. Each source chain has its own spec; the Ethereum sync-committee
+> source would be documented separately.
 
 ## 1. Methodology
 

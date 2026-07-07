@@ -1,6 +1,6 @@
 [package]
 name = "zkreceipt-light-client"
-description = "Simplex BFT finality verification for Tempo. no_std-compatible for SP1 zkVM guest use."
+description = "Source-chain finality light client (Tempo / Simplex BFT — one crate per source). no_std-compatible for SP1 zkVM guest use."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
