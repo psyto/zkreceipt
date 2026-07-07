@@ -47,7 +47,7 @@ assumption.
 | --- | --- |
 | `mpt-verify` (inclusion proof) | **Working** — validated against a real Tempo Moderato `eth_getProof` fixture bound to a real block `state_root`. |
 | `x402-receiver` (402 flow + trust ladder) | **Working** — `FixedAnchor` (T0) live; `LightClientAnchor` (T1/T2) decodes the on-chain PDA. |
-| `solana` verifier | **Partial** — `bootstrap` + `update_light_client` state-binding live; **Groth16 proof verification itself still stubbed** (proof accepted as-is pending vkey + `alt_bn128` wiring). |
+| `solana` verifier | **Partial** — `bootstrap` + `update_light_client` live with **real Groth16 verification** via `sp1-solana` (`alt_bn128`, ~200K CU). Fail-closed on a placeholder vkey until the guest's real vkey is embedded (Stage 2). |
 | `light-client` (Tempo Simplex) | **Partial** — Ed25519 proposer + structural checks live; **BFT aggregate quorum signature still `unimplemented!()`** (blocked on Tempo consensus format). |
 | `prover` (SP1) | **Scaffold** — guest wired end-to-end; no real proof generated yet. |
 

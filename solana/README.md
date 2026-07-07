@@ -13,14 +13,19 @@ source-independent — it checks whatever Groth16 proof the prover commits.
 
 **Partial.** Anchor program structure, account layouts, and the `bootstrap` +
 `update_light_client` instruction bodies (state-binding, slot + validator-set
-checks) are live. The **Groth16 proof verification itself is still stubbed**
-(the proof is accepted as-is) pending:
+checks) are live. **Groth16 proof verification is real** — wired to
+[`sp1-solana`](https://github.com/succinctlabs/sp1-solana)'s `verify_proof`
+over the committed public output via `alt_bn128` syscalls (~200K CU), before
+any state mutation. Host tests confirm it runs natively and fail-closes.
 
-1. Groth16 verification key generation (depends on prover guest program
-   from `../prover/program/`).
-2. `alt_bn128` syscall integration for pairing checks.
-3. Public-input canonical layout decided in
-   [`../spec/verifier.md`](../spec/verifier.md).
+The embedded `ZKRECEIPT_VKEY_HASH` is a **placeholder** until the guest's real
+verification key is generated (its `verify_update` leaf is incomplete), so the
+deployed default rejects every proof — fail-closed. Remaining (Stage 2):
+
+1. Build the guest → extract the real vkey → replace the placeholder.
+2. SP1 version: `sp1-solana` embeds the v5.0.0 vk, so the guest must be built
+   with SP1 v5.0.0.
+3. Positive-path E2E test with a real guest proof + devnet deploy.
 
 ## Important: nested workspace
 
