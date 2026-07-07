@@ -2,7 +2,7 @@
 //!
 //! A provider selling metered access uses this to (a) tell an unpaid caller
 //! *how* to pay (the HTTP 402 challenge) and (b) admit a caller who returns a
-//! payment proof — by verifying, against a zktempo-authenticated `state_root`,
+//! payment proof — by verifying, against a zkreceipt-authenticated `state_root`,
 //! that a settlement contract on Tempo credited the provider. No facilitator is
 //! trusted: `verify, don't trust`.
 //!
@@ -18,7 +18,7 @@
 
 use alloy_primitives::{Address, Bytes, U256};
 use serde::{Deserialize, Serialize};
-use zktempo_mpt_verify::{verify_payment, TrieAccount, VerifiedPayment, VerifyError};
+use zkreceipt_mpt_verify::{verify_payment, TrieAccount, VerifiedPayment, VerifyError};
 
 pub mod anchor;
 pub use anchor::{LightClientAnchor, StateRootSource};
@@ -155,7 +155,7 @@ mod tests {
     use super::anchor::{decode_light_client_state, FixedAnchor, LightClientAnchor, LightClientState};
     use super::*;
     use alloy_primitives::{B256, U256};
-    use zktempo_mpt_verify::testkit::{payment_fixture, PaymentFixture};
+    use zkreceipt_mpt_verify::testkit::{payment_fixture, PaymentFixture};
 
     const SLOT: u64 = 42;
 

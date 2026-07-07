@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-zktempo_verifier = "EMDfWFhRSZT749WBBARG3K5h1PQUUCCQcgoYtUg658Yv"
+zkreceipt_verifier = "EMDfWFhRSZT749WBBARG3K5h1PQUUCCQcgoYtUg658Yv"
 
 [programs.devnet]
-zktempo_verifier = "EMDfWFhRSZT749WBBARG3K5h1PQUUCCQcgoYtUg658Yv"
+zkreceipt_verifier = "EMDfWFhRSZT749WBBARG3K5h1PQUUCCQcgoYtUg658Yv"
 
 [registry]
 url = "https://api.apr.dev"

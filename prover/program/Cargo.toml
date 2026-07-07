@@ -1,22 +1,22 @@
-# SP1 zkVM guest crate. NOT a member of the outer zktempo workspace —
+# SP1 zkVM guest crate. NOT a member of the outer zkreceipt workspace —
 # built via `cargo prove build` with the Succinct rustc toolchain, not via
 # the host's `cargo build`. See the workspace root Cargo.toml's `exclude`
 # list and `../README.md`.
 
 # Empty [workspace] table — tells Cargo this is its own workspace root,
 # stopping the auto-discovery walk that would otherwise find the outer
-# zktempo workspace (cargo's `exclude` directive doesn't fully prevent this
+# zkreceipt workspace (cargo's `exclude` directive doesn't fully prevent this
 # during `cargo metadata`).
 [workspace]
 
 [package]
-name = "zktempo-prover-program"
-description = "SP1 zkVM guest program for zkTempo.sol — runs zktempo-light-client inside the zkVM."
+name = "zkreceipt-prover-program"
+description = "SP1 zkVM guest program for zkReceipt — runs zkreceipt-light-client inside the zkVM."
 version = "0.1.0-rfc.1"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["psyto <saito.hiroyuki@gmail.com>"]
-repository = "https://github.com/mppsol/zktempo"
+repository = "https://github.com/psyto/zkreceipt"
 
 [[bin]]
 name = "light_client"
@@ -29,7 +29,7 @@ sp1-zkvm = "=6.2.0"
 # `default-features = false` drops `std`; `features = ["verify"]` keeps
 # the verification surface (Ed25519, signing payload, etc.) which the
 # guest needs.
-zktempo-light-client = { path = "../../light-client", default-features = false, features = ["verify"] }
+zkreceipt-light-client = { path = "../../light-client", default-features = false, features = ["verify"] }
 # ciborium is the actively-maintained CBOR crate; serde_cbor 0.11.2 is
 # unmaintained and incompatible with modern serde_core. ciborium supports
 # no_std + alloc.

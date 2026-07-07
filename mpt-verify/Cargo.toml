@@ -1,6 +1,6 @@
 [package]
-name = "zktempo-mpt-verify"
-description = "MPT inclusion verification for Tempo (Reth/Ethereum-style) state roots. Lets an x402 receiver confirm a payment landed on Tempo by verifying an EIP-1186 account+storage proof against a zktempo-authenticated state_root — no facilitator."
+name = "zkreceipt-mpt-verify"
+description = "MPT inclusion verification for Tempo (Reth/Ethereum-style) state roots. Lets an x402 receiver confirm a payment landed on Tempo by verifying an EIP-1186 account+storage proof against a zkreceipt-authenticated state_root — no facilitator."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

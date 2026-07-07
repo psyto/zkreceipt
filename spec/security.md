@@ -25,7 +25,7 @@ See the [README](../README.md) for project overview and architecture.
 
 ## Inherited threat surface
 
-zkTempo.sol inherits the security assumptions of:
+zkReceipt inherits the security assumptions of:
 
 - **Tempo's Simplex BFT consensus** (honest-majority validator set).
 - **SP1's zkVM and Groth16 wrapper** (soundness of the proof system; trusted
@@ -35,4 +35,4 @@ zkTempo.sol inherits the security assumptions of:
 - **Tempo's Merkle Patricia trie semantics** (state root commits to all
   storage; same as Ethereum).
 
-Failures in any of these layers are out of zkTempo.sol's scope to mitigate.
+Failures in any of these layers are out of zkReceipt's scope to mitigate.

@@ -1,6 +1,6 @@
 # Composition: mppsol_cpi integration
 
-This document specifies how [mppsol_cpi] consumes zkTempo.sol finality proofs
+This document specifies how [mppsol_cpi] consumes zkReceipt finality proofs
 to authorize Solana-side settlement of payments originated on Tempo. It is
 addressed to authors of downstream consumer programs — merchant treasuries,
 intent settlers, agent commerce rails — that need to verify a Tempo payment
@@ -14,11 +14,11 @@ mppsol_cpi v0.1's `verify_paid_result` accepts an **Ed25519 signature** from a
 designated server key as evidence that a payment occurred off-chain. The trust
 assumption is: the server holding the key has correctly observed the payment.
 
-zkTempo.sol introduces a parallel verification path that replaces this with
+zkReceipt introduces a parallel verification path that replaces this with
 two cryptographic proofs:
 
 1. **Finality** — a specific Tempo block was finalized by Simplex BFT
-   consensus. Proved by Groth16 verification at the zkTempo verifier PDA.
+   consensus. Proved by Groth16 verification at the zkReceipt verifier PDA.
 2. **Inclusion** — a specific storage slot or log entry exists in that block's
    state root. Proved by Merkle Patricia inclusion proof, verified inside
    mppsol_cpi.
@@ -31,8 +31,8 @@ only off-Solana trust anchor.
 Boundary types crossing into mppsol_cpi:
 
 ```rust
-/// A finalized state root recorded by zkTempo.sol.
-/// Read from the zkTempo verifier PDA; not passed by the caller.
+/// A finalized state root recorded by zkReceipt.
+/// Read from the zkReceipt verifier PDA; not passed by the caller.
 pub struct FinalizedRoot {
     pub slot: u64,
     pub state_root: [u8; 32],
@@ -62,17 +62,17 @@ A consumer program calls mppsol_cpi inline, verifies, and proceeds with
 settlement in the same transaction. No persistent receipt.
 
 ```rust
-use mppsol_cpi::cpi::{verify_paid_result_zktempo, accounts::*};
+use mppsol_cpi::cpi::{verify_paid_result_zkreceipt, accounts::*};
 
 let receipt: TempoPaymentReceipt = /* constructed off-chain */;
 let cpi_ctx = CpiContext::new(
     mppsol_cpi_program.to_account_info(),
-    VerifyPaidResultZkTempo {
-        zktempo_verifier: zktempo_verifier_pda.to_account_info(),
+    VerifyPaidResultZkReceipt {
+        zkreceipt_verifier: zkreceipt_verifier_pda.to_account_info(),
         // ...
     },
 );
-verify_paid_result_zktempo(cpi_ctx, receipt, expected_amount, expected_recipient)?;
+verify_paid_result_zkreceipt(cpi_ctx, receipt, expected_amount, expected_recipient)?;
 release_goods(ctx)?;
 ```
 
@@ -86,7 +86,7 @@ billing, multi-step fulfillment, batched delivery — persist a Receipt PDA so
 the expensive verification runs only once.
 
 ```rust
-verify_paid_result_zktempo_with_receipt(
+verify_paid_result_zkreceipt_with_receipt(
     cpi_ctx,
     receipt,
     expected_amount,
@@ -109,7 +109,7 @@ session by proving a corresponding Tempo payment. The session program records
 the linkage and emits a settlement event.
 
 ```rust
-mppsol_session::cpi::settle_via_zktempo(cpi_ctx, session_id, receipt)?;
+mppsol_session::cpi::settle_via_zkreceipt(cpi_ctx, session_id, receipt)?;
 // Updates session: settled_amount += receipt.intent.amount
 // Emits SessionSettled { session_id, tempo_intent_hash, slot }
 ```
@@ -118,7 +118,7 @@ mppsol_session::cpi::settle_via_zktempo(cpi_ctx, session_id, receipt)?;
 recurring billing — the Solana session is the canonical account and Tempo is
 the payment rail.
 
-### Pattern 4 — Hybrid attestation (Ed25519 OR zkTempo)
+### Pattern 4 — Hybrid attestation (Ed25519 OR zkReceipt)
 
 During the Ed25519 → ZK migration window, consumers may want to accept either
 form per-payment:
@@ -126,12 +126,12 @@ form per-payment:
 ```rust
 pub enum PaymentAuthorization {
     Ed25519 { signature: [u8; 64], signer: Pubkey, payload: Vec<u8> },
-    ZkTempo { receipt: TempoPaymentReceipt },
+    ZkReceipt { receipt: TempoPaymentReceipt },
 }
 ```
 
 Route by enum: small/fast payments accept Ed25519, large/trustless payments
-require zkTempo. mppsol_cpi will not deprecate Ed25519 in v0.1 — both
+require zkReceipt. mppsol_cpi will not deprecate Ed25519 in v0.1 — both
 variants are stable.
 
 **Use when** migrating existing flows, or accepting a permanent trust trade-off
@@ -145,7 +145,7 @@ End-to-end sequence for Pattern 1:
 Off-chain (relayer or end user)
   │
   ├─ 1. Observe Tempo block N finalized (poll explore.tempo.xyz or RPC)
-  ├─ 2. Fetch (slot, state_root) for N from zkTempo verifier PDA
+  ├─ 2. Fetch (slot, state_root) for N from zkReceipt verifier PDA
   ├─ 3. Fetch MPT inclusion proof from a Tempo full node (eth_getProof)
   ├─ 4. Construct TempoPaymentReceipt
   ▼
@@ -153,11 +153,11 @@ Off-chain (relayer or end user)
 Solana (single transaction)
   consumer_program::settle(...)
     │
-    ├─ CPI ─► mppsol_cpi::verify_paid_result_zktempo(
+    ├─ CPI ─► mppsol_cpi::verify_paid_result_zkreceipt(
     │           receipt, expected_amount, expected_recipient
     │         )
     │           │
-    │           ├─ Read zktempo_verifier_pda → confirms (slot, state_root) finalized
+    │           ├─ Read zkreceipt_verifier_pda → confirms (slot, state_root) finalized
     │           ├─ Verify receipt.inclusion.mpt_proof against state_root
     │           ├─ Decode receipt.inclusion.value → PaymentIntent
     │           ├─ Assert intent.amount == expected_amount
@@ -171,12 +171,12 @@ Preliminary CU budget (pre-implementation):
 
 | Operation | CU (est.) |
 | --- | --- |
-| Read zkTempo verifier PDA | ~1,000 |
+| Read zkReceipt verifier PDA | ~1,000 |
 | MPT inclusion verification | 50,000–150,000 (depth-dependent) |
 | ABI decode `PaymentIntent` | ~5,000 |
 | **Total mppsol_cpi overhead** | **~60,000–160,000** |
 
-Groth16 verification cost lives in the **zkTempo verifier program**, not in
+Groth16 verification cost lives in the **zkReceipt verifier program**, not in
 mppsol_cpi. It is amortized across all downstream consumers reading the
 verifier PDA for the same finalized block.
 
@@ -185,15 +185,15 @@ verifier PDA for the same finalized block.
 For consumers currently using `mppsol_cpi::verify_paid_result`:
 
 1. Continue calling the Ed25519 variant unchanged for existing flows.
-2. For new flows, integrate `verify_paid_result_zktempo` (Pattern 1 or 2).
+2. For new flows, integrate `verify_paid_result_zkreceipt` (Pattern 1 or 2).
 3. mppsol_cpi keeps both variants stable in v0.1; no forced cutover.
 
 Side-by-side:
 
-| | Ed25519 (v0.1 today) | zkTempo (this spec) |
+| | Ed25519 (v0.1 today) | zkReceipt (this spec) |
 | --- | --- | --- |
 | Authorization | Server signature | Validator-finalized state proof |
-| Trust anchor | Server signer key | Tempo validator set + zkTempo prover liveness |
+| Trust anchor | Server signer key | Tempo validator set + zkReceipt prover liveness |
 | Latency to proof | Immediate | One Tempo finality + one prover update (~5–60s) |
 | On-chain cost | Ed25519 syscall (~5K CU) | ~60–160K CU (MPT verify) |
 | Replay protection | Caller-provided nonce | Receipt PDA (Pattern 2) or caller-provided |
@@ -216,4 +216,4 @@ Not yet pinned in this draft:
   policy to the consumer program? Leaning: consumer responsibility.
 
 Comments welcome — open an issue at
-[github.com/zktempo/spec/issues](https://github.com/zktempo/spec/issues).
+[github.com/psyto/zkreceipt/issues](https://github.com/psyto/zkreceipt/issues).

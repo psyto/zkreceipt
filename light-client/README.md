@@ -1,4 +1,4 @@
-# zktempo-light-client
+# zkreceipt-light-client
 
 Simplex BFT finality verification for Tempo.
 
@@ -18,7 +18,7 @@ design and open research items.
 ## Usage
 
 ```rust
-use zktempo_light_client::{LightClientStore, Update, verify_update};
+use zkreceipt_light_client::{LightClientStore, Update, verify_update};
 
 let store: LightClientStore = /* loaded from verifier PDA */;
 let update: Update = /* fetched from off-chain prover */;

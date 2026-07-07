@@ -1,7 +1,7 @@
-//! # zktempo-prover
+//! # zkreceipt-prover
 //!
-//! Off-chain prover for zkTempo.sol. Generates Groth16 (over BN254) proofs
-//! of Tempo finality by running [`zktempo_light_client`] inside the SP1
+//! Off-chain prover for zkReceipt. Generates Groth16 (over BN254) proofs
+//! of Tempo finality by running [`zkreceipt_light_client`] inside the SP1
 //! zkVM guest, then wrapping the resulting STARK in Groth16 for cheap
 //! on-chain verification on Solana via `alt_bn128` syscalls.
 //!
@@ -13,7 +13,7 @@
 
 #![deny(missing_docs)]
 
-use zktempo_light_client::{FinalizedRoot, LightClientStore, Update};
+use zkreceipt_light_client::{FinalizedRoot, LightClientStore, Update};
 
 /// Configuration for the prover host.
 #[derive(Debug, Clone)]
@@ -72,8 +72,8 @@ pub struct ProofArtifact {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProverError {
     /// Light-client verification of the input update failed before proving
-    /// started. The wrapped error came from [`zktempo_light_client`].
-    LightClientRejected(zktempo_light_client::VerifyError),
+    /// started. The wrapped error came from [`zkreceipt_light_client`].
+    LightClientRejected(zkreceipt_light_client::VerifyError),
     /// SP1 zkVM execution failed — guest panicked, aborted, or returned an
     /// invalid commitment.
     GuestExecutionFailed(String),
@@ -86,7 +86,7 @@ pub enum ProverError {
 
 /// Generate a Groth16 proof for a single finality update.
 ///
-/// Runs [`zktempo_light_client::verify_update`] inside the SP1 guest,
+/// Runs [`zkreceipt_light_client::verify_update`] inside the SP1 guest,
 /// commits the resulting [`FinalizedRoot`] and validator-set hash as
 /// public inputs, then wraps the STARK proof in Groth16.
 ///
@@ -124,7 +124,7 @@ mod tests {
             validator_set_hash: [0u8; 32],
         };
         let _err = ProverError::LightClientRejected(
-            zktempo_light_client::VerifyError::InvalidProposerSignature,
+            zkreceipt_light_client::VerifyError::InvalidProposerSignature,
         );
     }
 }

@@ -1,6 +1,6 @@
 # Prover — SP1 program contract
 
-> **Status: stub.** To be drafted alongside the `zktempo/prover` Rust crate
+> **Status: stub.** To be drafted alongside the `zkreceipt/prover` Rust crate
 > and the off-chain operator implementation.
 
 This document will specify:

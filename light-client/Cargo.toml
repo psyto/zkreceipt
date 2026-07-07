@@ -1,5 +1,5 @@
 [package]
-name = "zktempo-light-client"
+name = "zkreceipt-light-client"
 description = "Simplex BFT finality verification for Tempo. no_std-compatible for SP1 zkVM guest use."
 version.workspace = true
 edition.workspace = true

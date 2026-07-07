@@ -6,7 +6,7 @@
 //! mapping `keccak256(slot)` to an RLP value.
 //!
 //! This crate is the *receiver* half of an x402 flow. The receiver (a provider
-//! selling API access) has, via the on-chain zktempo verifier, an
+//! selling API access) has, via the on-chain zkreceipt verifier, an
 //! **authenticated `state_root`** for a finalized Tempo slot (the
 //! `LightClientState` PDA). It does not trust any facilitator's claim that
 //! "you were paid" — instead it verifies, against that `state_root`:
@@ -24,7 +24,7 @@
 //! `state_root` is itself trustworthy is the job of the layer below:
 //!   - **T0 (demo):** a permissioned updater populates the state_root.
 //!   - **T1:** single Tempo proposer Ed25519 signature (works today in the
-//!     `zktempo-light-client` crate).
+//!     `zkreceipt-light-client` crate).
 //!   - **T2:** full BFT quorum + on-chain Groth16 (blocked on Tempo §3.3 / SP1
 //!     vkey).
 //! Swapping the anchor does not change any code here.

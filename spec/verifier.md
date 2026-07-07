@@ -1,6 +1,6 @@
 # Verifier — Solana Anchor program
 
-> **Status: stub.** To be drafted alongside the `zktempo/solana` Anchor
+> **Status: stub.** To be drafted alongside the `zkreceipt/solana` Anchor
 > workspace.
 
 This document will specify:
